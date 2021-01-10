@@ -241,9 +241,10 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  int temp = y+(~x)+1;
-  int sign = 1<<31;
-  return !(temp&sign);
+   int sign = !(x>>31)^!(y>>31);      // is 1 when signs are different
+   int a = sign & (x>>31);            // diff signs and x is neg, gives 1
+   int b = !sign & !((y+(~x+1))>>31); // same signs and difference is positive or = 0, gives 1
+   return a | b;
 }
 //4
 /* 
