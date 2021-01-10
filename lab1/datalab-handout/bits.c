@@ -178,8 +178,8 @@ int isTmax(int x) {
  */
 int allOddBits(int x) {
   int mask = 0xAA;
-  mask = mask+mask<<8;
-  mask = mask+mask<<16;
+  mask = mask+(mask<<8);
+  mask = mask+(mask<<16);
   return !((x&mask)^mask);
 }
 /* 
@@ -256,7 +256,7 @@ int isLessOrEqual(int x, int y) {
  */
 int logicalNeg(int x) {
 
-  return ((x|~x+1)>>31)+1;
+  return ((x|(~x+1))>>31)+1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
