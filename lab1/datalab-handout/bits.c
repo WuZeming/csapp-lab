@@ -328,29 +328,70 @@ unsigned floatScale2(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-int floatFloat2Int(unsigned uf) {
-  int sign = uf>>31;
-  int exp = ((uf&~(1<<31))>>23)-127;
-  int frac = (uf&~(-1<<23))|(1<<24); // 补省略的1
-  if(exp >31) return  0x80000000u; // 溢出
-  if(exp<0) return 0; // 小于1
+int floatFloat2Int(unsigned uf)
+{
+  int sign = uf >> 31;
+  int exp = ((uf & 0x7f800000) >> 23) - 127;
+  // complements shadowed 1 ahead of number
+  int frac = (uf & 0x007fffff) | 0x00800000;
+  // ignore sign and judge 0
+  if (!(uf & 0x7fffffff))
+    return 0;
+  // overflow
+  if (exp > 31)
+    return 0x80000000;
+  // decimal cast to 0
+  if (exp < 0)
+    return 0;
+  // 23 is the number of frac bits 32 - 9 = 23
+  // we need to complement 0
+  if (exp > 23)
+    frac <<= (exp - 23);
+  else
+    frac >>= (23 - exp);
+  // check whether overflow
+  if (!((frac >> 31) ^ sign))
+    return frac; // sign is same with before
+  // sign is 1 and sign is different from before, overflow
+  else if (frac >> 31)
+    return 0x80000000;
+  // sign is different from before and now is positive, get the minus
+  else
+    return ~frac + 1;
+}
 
-  if(exp>23) frac = frac<<(exp-23);
-  else frac = frac>>(23-frac);
+int floatFloat2Int2(unsigned uf)
+{
+  int sign = uf >> 31;
+  int exp = ((uf & 0x7f800000) >> 23) - 127;
+  // complements shadowed 1 ahead of number
+  int frac = (uf & 0x007fffff) | 0x00800000;
+  if (exp > 31)
+    return 0x80000000u; // 溢出
+  if (exp < 0)
+    return 0; // 小于1
 
-  if(frac>>31) return 0x80000000u;
+  if (exp > 23)
+    frac =
+        frac << (exp - 23);
+  else
+    frac = frac >> (23 - frac);
+
+  if (frac >> 31)
+    return 0x80000000;
   else
   {
-    if(sign==0)
+    if (sign == 0)
     {
       return frac;
-    }else
-    {
-      return ~frac+1;
     }
-    
+    else
+    {
+      return ~frac + 1;
+    }
   }
 }
+
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
  *   (2.0 raised to the power x) for any 32-bit integer x.
