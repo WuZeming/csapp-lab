@@ -329,7 +329,27 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  int sign = uf>>31;
+  int exp = ((uf&~(1<<31))>>23)-127;
+  int frac = (uf&~(-1<<23))|(1<<24); // 补省略的1
+  if(exp >31) return  0x80000000u; // 溢出
+  if(exp<0) return 0; // 小于1
+
+  if(exp>23) frac = frac<<(exp-23);
+  else frac = frac>>(23-frac);
+
+  if(frac>>31) return 0x80000000u;
+  else
+  {
+    if(sign==0)
+    {
+      return frac;
+    }else
+    {
+      return ~frac+1;
+    }
+    
+  }
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -345,5 +365,15 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+  if(x>=-149 && x<=-127) // 非规格化的数
+  {
+    int i = x+149;
+    return 1<<i;
+  }else
+  {
+    int exp = x+127;
+    if(exp<=0) return 0;
+    if(exp>=255) return 0x7f800000;
+    return exp <<23;
+  }
 }
